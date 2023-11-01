@@ -222,8 +222,6 @@ project.lock.json
 AppPackages/
 
 #Custom ignoring
-/Test3
-/Test2
 /MindboxTestTaskQuery/appsettings.json
 
 #####

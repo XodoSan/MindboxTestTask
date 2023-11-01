@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MindboxTestTaskQuery.Domain.Repositories;
 using MindboxTestTaskQuery.Infrastructure;
@@ -7,21 +8,15 @@ using MindboxTestTaskQuery.Infrastructure.Helpers;
 
 public class Program
 {
-    //Db connection string
-    private static readonly string connectionString;
-
-    static Program() 
-    {
-        JsonHelper helper = new JsonHelper($"{Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.Parent.FullName}/appsettings.json");
-        connectionString = helper.GetInfoByKey("default");
-    }
-
     //Configure services
     private static IServiceCollection ConfigureServices()
     {
         var services = new ServiceCollection();
         services.AddScoped<ICategoryProductRepository, CategoryProductRepository>();
 
+        string rootUrl = Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.Parent.FullName.ToString();
+        IConfiguration config = GetConfigByUrl(rootUrl);
+        string connectionString = config.GetConnectionString("default");
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlServer(connectionString);
@@ -76,10 +71,23 @@ public class Program
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            string rootUrl = Directory.GetCurrentDirectory();
+            IConfiguration config = GetConfigByUrl(rootUrl);
+            string connectionString = config.GetConnectionString("default");
+
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }
+    }
+
+    private static IConfiguration GetConfigByUrl(string rootUrl)
+    {
+        var builder = new ConfigurationBuilder()
+            .SetBasePath(rootUrl)
+            .AddJsonFile("appsettings.json");
+
+        return builder.Build();
     }
 }
